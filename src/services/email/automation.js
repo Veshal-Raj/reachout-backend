@@ -2,15 +2,20 @@ import fs from 'fs'
 import { exit } from "process"
 import nodemailer from "nodemailer"
 import xlsx from "xlsx"
+import { changeUserSenderCredentialsStatus, getUserById } from "../db/user-service.js"
 
-export async function startAutomation(list, template) {
+export async function startAutomation(userId, list, template) {
     try {
         const { recipients } = list;
+
+        const senderCredentials = await getUserById(userId, "metaData")
+        console.log("sender credentials ---  ", senderCredentials?.metaData);
+        const userMailCredentials = senderCredentials?.metaData;
         const transporter = nodemailer.createTransport({
             service: 'gmail', 
             auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASSWORD
+                user: userMailCredentials?.senderEmail || process.env.EMAIL_USER,
+                pass: userMailCredentials?.senderEmailPassword || process.env.EMAIL_PASSWORD
             }
         });
 
@@ -32,6 +37,7 @@ export async function startAutomation(list, template) {
                 return true;
             } catch (error) {
                 console.error(`Error sending to ${user.receiverEmail}:`, error);
+                await changeUserSenderCredentialsStatus(userId, false)
                 return false;
             }
         });

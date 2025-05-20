@@ -9,7 +9,8 @@ const userSchema = new Schema(
       metaData: {
         senderEmail: { type: String, default: "" },
         senderEmailPassword: { type: String, default: "" }
-      }
+      },
+      verified: { type: Boolean, default: false }
     },
     { timestamps: true }
   );

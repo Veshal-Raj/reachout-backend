@@ -18,6 +18,7 @@ export async function sendCampaign(req, res, next) {
             const jobTime = moment(scheduledAt).toDate(); 
             console.log("job time ---  ", jobTime)
             const test = await agenda.schedule(jobTime, "send email campaign", {
+                userId,
                 list,
                 template
             });
@@ -26,7 +27,7 @@ export async function sendCampaign(req, res, next) {
             return res.status(200).json({ success: true, message: "Campaign Scheduled Successfully"});
         } else {
 
-            const success = await startAutomation(list, template);
+            const success = await startAutomation(userId, list, template);
     
             if (success) {
                 return res.status(200).json({ success: true, message: 'Campaign started successfully' });

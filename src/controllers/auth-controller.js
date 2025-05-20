@@ -148,7 +148,7 @@ export async function checkUserValid(req, res, next) {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      const user = await userService.getUserById(decoded?.id, "-password");
+      const user = await userService.getUserById(decoded?.id, "-metaData -password");
       
       if (!user) {
         return res.status(401).json({ message: 'User not found' });
