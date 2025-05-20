@@ -38,9 +38,41 @@ export async function getEmailTemplateByIdAndUserId(templateId, userId) {
             createdBy: userId
         })
 
+        if (!template) throw new Error("Template Not Found");
         return template;
     } catch (error) {
         console.error("Error in emailTemplateService.getEmailTemplateByIdAndUserId ", error);
+        throw error;
+    }
+}
+
+export async function getPaginatedTemplates(userId, searchQuery, page, limit, skip) {
+    try {
+        const filter = {
+            createdBy: userId,
+            templateName: { $regex: searchQuery, $options: "i" }
+        }
+
+        const [templates, total] = await Promise.all([
+            Template.find(filter)
+                .skip(skip)
+                .limit(limit)
+                .sort({ createdAt: -1 }),
+
+            Template.countDocuments(filter)
+        ])
+
+        const totalPages = Math.ceil(total/limit);
+
+        return {
+            currentPage: page,
+            totalPages,
+            totalItems: total,
+            items: templates
+        }
+
+    } catch (error) {
+        console.error("Error in emailTemplateService.getPaginatedTemplates ", error);
         throw error;
     }
 }

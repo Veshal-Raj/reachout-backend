@@ -33,9 +33,41 @@ export async function getListByIdAndUserId(listId, userId) {
             _id: listId,
             createdBy: userId
         })
+        if (!list) throw new Error("List not found");
         return list;
     } catch (error) {
         console.error("Error in listBuilderService.getListByIdAndUserId ", error);
+        throw error;
+    }
+}
+
+export async function getPaginatedLists(userId, searchQuery, page, limit, skip) {
+    try {
+
+        const filter = {
+            createdBy: userId,
+            name: { $regex: searchQuery, $options: "i" }
+        }
+
+        const [lists, total] = await Promise.all([
+            List.find(filter)
+                .skip(skip)
+                .limit(limit)
+                .sort({ createdAt: -1 }),
+            
+            List.countDocuments(filter)
+        ])
+
+        const totalPages = Math.ceil(total/limit);
+
+        return {
+            currentPage: page,
+            totalPages,
+            totalItems: total,
+            items: lists
+        }
+    } catch (error) {
+        console.error("Error in listBuilderService.getPaginatedLists ", error);
         throw error;
     }
 }
