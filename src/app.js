@@ -8,7 +8,7 @@ dotenv.config();
 
 
 import agenda from './services/job/agenda.js';
-import "./services/job/emailCampaignJob.js";
+import "./services/job/email-campaign-job.js";
 
 import router from './routes/index.js';
 import errorHandler from './middlewares/error-handler/index.js';
@@ -32,12 +32,11 @@ app.use(express.json({ limit: "2mb" }));
 app.use(helmet());
 app.use(cookieParser())
 // Logging directly here
-app.use(morgan('dev')); // or 'combined', 'tiny', etc.
+app.use(morgan('dev'));
 
-// Routes and Error Handler
-// app.use(router);
-app.use('/api/v1', router); // This will prefix all routes in the router with '/api/v1'
-app.use('/api/v1/auth', authRouter); // This will prefix all routes in the router with '/api/v1/auth'
+
+app.use('/api/v1', router); 
+app.use('/api/v1/auth', authRouter); 
   
 app.use(errorHandler);
 

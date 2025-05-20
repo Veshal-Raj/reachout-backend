@@ -6,6 +6,10 @@ const userSchema = new Schema(
       lastName: { type: String, required: true },
       email: { type: String, required: true, unique: true },
       password: { type: String, required: true },
+      metaData: {
+        senderEmail: { type: String, default: "" },
+        senderEmailPassword: { type: String, default: "" }
+      }
     },
     { timestamps: true }
   );
