@@ -2,6 +2,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { generateToken, validateEmail } from "../utils/helper.js";
 import * as userService from "../services/db/user-service.js"
+import dotenv from 'dotenv';
+dotenv.config();
 
 
 
@@ -99,8 +101,8 @@ export async function loginUser(req, res, next) {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false,      // must be false on localhost unless using HTTPS
-      sameSite: "lax",    // or "none" if cross-origin
+      secure: process.env.NODE_ENV === "development" ? false: true,      // must be false on localhost unless using HTTPS
+      sameSite: process.env.NODE_ENV === "development" ? "lax" : "none",    // or "none" if cross-origin
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
