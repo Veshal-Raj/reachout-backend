@@ -125,8 +125,8 @@ export async function logoutUser(req, res, next) {
     try {
       res.clearCookie('token', {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: process.env.NODE_ENV === "development" ? false: true,      // must be false on localhost unless using HTTPS
+        sameSite: process.env.NODE_ENV === "development" ? "lax" : "none",    // or "none" if cross-origin
       });
 
       return res.status(200).json({ success: true, message: 'Logged out successfully' });
