@@ -71,3 +71,14 @@ export async function getPaginatedLists(userId, searchQuery, page, limit, skip) 
         throw error;
     }
 }
+
+export async function deleteListById(listId) {
+    try {
+        const response = await List.findByIdAndDelete(listId);
+        if (!response) throw new Error("List deletion failed");
+        return response;
+    } catch (error) {
+        console.error("Error in listBuilderService.deleteListById ", error);
+        throw error;
+    }
+}

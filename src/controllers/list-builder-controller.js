@@ -65,3 +65,14 @@ export async function getPaginatedLists(req, res, next) {
       res.status(500).json({ success: false, message: "Something went wrong during fetching list in pagination"})
   }
 }
+
+export async function deleteListById(req, res, next) {
+  try {
+      const { listId } = req.params;
+      await listBuilderService.deleteListById(listId);
+      return res.status(200).json({ success: true, message: "List deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting list  ", error);
+    res.status(500).json({ success: false, message: "Something went wrong during deleting the list "})
+  }
+}

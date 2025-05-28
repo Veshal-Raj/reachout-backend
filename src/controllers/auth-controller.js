@@ -1,124 +1,123 @@
-import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { generateToken, validateEmail } from "../utils/helper.js";
+import { google } from "googleapis";
 import * as userService from "../services/db/user-service.js"
 import dotenv from 'dotenv';
+import { generateToken } from "../utils/helper.js";
+import User from "../models/user-model.js";
 dotenv.config();
 
 
+// Initialize OAuth2 client
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI
+);
 
-export async function registerUser(req, res, next) {
-    try {
-          // More detailed validation
-          const { firstName, lastName, email, password } = req.body;
-          
-          if (!firstName?.trim() || !lastName?.trim()) {
-            return res.status(400).json({ 
-              success: false,
-              message: "Name is required" 
-            });
-          }
-      
-          if (!validateEmail(email)) {
-            return res.status(400).json({
-              success: false,
-              message: "Please provide a valid email"
-            });
-          }
-      
-          if (password.length < 8) {
-            return res.status(400).json({
-              success: false,
-              message: "Password must be at least 8 characters"
-            });
-          }
-      
-          // Check for existing user
-        const existingUser = await userService.getUserByEmail(email);
-          if (existingUser) {
-            return res.status(409).json({
-              success: false,
-              message: "Email already in use"
-            });
-          }
-      
-          // Create user
-        const hashedPassword = await bcrypt.hash(password, 12)
-        const user = await userService.createUser(firstName, lastName, email, hashedPassword);
-      
-          // Generate token
-          const token = jwt.sign(
-            { id: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: '1d' }
-          );
-      
-          // Omit password in response
-          const userResponse = {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            createdAt: user.createdAt
-          };
-      
-          res.status(201).json({
-            success: true,
-            message: "Registration successful",
-            data: {
-              user: userResponse,
-              token
-            }
-          });
-      
-        } catch (error) {
-          next(error); // Pass to error handler
-        }
+export async function generateGoogleAuthUrl(req, res, next) {
+  try {
+    const authUrl = oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: [
+        'https://www.googleapis.com/auth/gmail.send',
+        'https://www.googleapis.com/auth/userinfo.email'
+      ], // Use the correct Gmail API scope
+      prompt: 'consent',
+      include_granted_scopes: true
+    });
+
+  res.json({ url: authUrl });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({ success: false, message: "Generate google auth url failed" });
+  }
 }
 
-export async function loginUser(req, res, next) {
-    try {
-    const { email, password } = req.body;
+export async function handleOAuthCallback(req, res, next) {
+  try {
+      const { code, error } = req.query;
+  
+      // Handle OAuth errors
+      if (error) {
+        console.error('OAuth error:', error);
+        return res.redirect(`${process.env.FRONTEND_URL}/error?message=${encodeURIComponent('OAuth authorization was denied or failed')}`);
+      }
+      
+      if (!code) {
+        return res.redirect(`${process.env.FRONTEND_URL}/error?message=${encodeURIComponent('No authorization code received')}`);
+      }
 
-    // Validation
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: "Email and password are required" });
+      // Exchange code for tokens
+    const { tokens } = await oauth2Client.getToken(code);
+    const { access_token, refresh_token } = tokens;
+    
+     console.log('Tokens received:', {
+      hasAccessToken: !!access_token,
+      hasRefreshToken: !!refresh_token
+    });
+
+    if (!refresh_token) {
+      console.error('No refresh token received');
+      return res.redirect(`${process.env.FRONTEND_URL}/error?message=${encodeURIComponent('No refresh token received. Please revoke app access in your Google Account settings and try again.')}`);
+    }
+    
+    // Use access token to get user info
+    oauth2Client.setCredentials({ access_token });
+    const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
+    const { data: googleUser } = await oauth2.userinfo.get();
+    
+    console.log('Google user info:', googleUser.email);
+    
+    // Save/update user in database
+    let user = await User.findOne({ email: googleUser.email });
+    
+    if (user) {
+      // Update existing user's refresh token and last login
+      user.refreshToken = refresh_token;
+      user.lastLogin = new Date();
+      if (!user.metaData) {
+        user.metaData = {};
+      }
+      user.metaData.senderEmail = googleUser.email;
+      
+      await user.save();
+      console.log('Updated existing user:', user.email);
+    } else {
+      user = await userService.createUser(
+        googleUser.given_name || 'User',
+        googleUser.family_name || 'Name',
+        googleUser.email,
+        'oauth-user',
+        true,
+        refresh_token,
+        googleUser.email
+      )
     }
 
-    // Check if user exists
-    const user = await userService.getUserByEmail(email);
-    if (!user) {
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
-    }
-
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
-    }
-
-    // Generate token
     const token = generateToken(user);
-
-    res.cookie("token", token, {
+      res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "development" ? false: true,      // must be false on localhost unless using HTTPS
       sameSite: process.env.NODE_ENV === "development" ? "lax" : "none",    // or "none" if cross-origin
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "Login successful",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
-      token,
-    });
+      });
+    console.log('Created new user:', user.email);
+    
+    console.log(`User authenticated: ${googleUser.email}`);
+    
+    // Redirect to frontend with user ID
+    res.redirect(`${process.env.FRONTEND_URL}/home`);
   } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ success: false, message: "Login failed" });
+    console.error('OAuth callback error:', error);
+    
+    let errorMessage = 'Authentication failed';
+    if (error.message.includes('invalid_grant')) {
+      errorMessage = 'Invalid authorization code. Please try again.';
+    } else if (error.message.includes('access_denied')) {
+      errorMessage = 'Access denied. Please grant the necessary permissions.';
+    }
+    
+    res.redirect(`${process.env.FRONTEND_URL}/error?message=${encodeURIComponent(errorMessage)}`);
   }
 }
 
