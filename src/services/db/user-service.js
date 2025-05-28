@@ -25,13 +25,26 @@ export async function getUserByEmail(email) {
     }
 }
 
-export async function createUser(firstName, lastName, email, password) {
+export async function createUser(
+    firstName, 
+    lastName, 
+    email, 
+    password, 
+    verified,
+    refreshToken,
+    senderEmail,
+) {
     try {
         const user = await User.create({
             firstName: firstName.trim(),
             lastName: lastName.trim(),
             email: email.toLowerCase(),
-            password: password
+            password: password,
+            verified: verified,
+            refreshToken: refreshToken,
+            metaData: {
+                senderEmail: senderEmail
+            }
         });
 
         return user;

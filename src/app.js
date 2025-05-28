@@ -6,13 +6,12 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 dotenv.config();
 
-
 import agenda from './services/job/agenda.js';
 import "./services/job/email-campaign-job.js";
 
 import router from './routes/index.js';
 import errorHandler from './middlewares/error-handler/index.js';
-import authRouter from './routes/auth-router.js';
+import authRoutes from "./routes/auth.js";
 
 const app = express();
 
@@ -36,8 +35,8 @@ app.use(morgan('dev'));
 
 
 app.use('/api/v1', router); 
-app.use('/api/v1/auth', authRouter); 
-  
+app.use('/api/v1/auth', authRoutes);
+
 app.use(errorHandler);
 
 export { app };

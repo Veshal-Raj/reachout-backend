@@ -10,7 +10,16 @@ const userSchema = new Schema(
         senderEmail: { type: String, default: "" },
         senderEmailPassword: { type: String, default: "" }
       },
-      verified: { type: Boolean, default: false }
+      verified: { type: Boolean, default: false },
+      refreshToken: { type: String, required: false},
+      createdAt: {
+        type: Date,
+        default: Date.now
+      },
+      lastLogin: {
+        type: Date,
+        default: Date.now
+      }
     },
     { timestamps: true }
   );

@@ -1,18 +1,35 @@
-import { Router } from "express";
-import * as authController from "../controllers/auth-controller.js"
+// import { Router } from "express";
+// import { google } from "googleapis";
+// import * as authController from "../controllers/auth-controller.js"
 
-const authRouter = Router();
+// const authRouter = Router();
 
-// Register route
-authRouter.post("/register", authController.registerUser);
+// // Initialize OAuth2 client
+// const oauth2Client = new google.auth.OAuth2(
+//   process.env.GOOGLE_CLIENT_ID,
+//   process.env.GOOGLE_CLIENT_SECRET,
+//   process.env.GOOGLE_REDIRECT_URI
+// );
 
-// Login route
-authRouter.post("/login", authController.loginUser);
+// // Logout route
+// // authRouter.post("/logout", authController.logoutUser);
 
-// Logout route
-authRouter.post("/logout", authController.logoutUser);
+// // check user valid
+// // authRouter.get("/user-valid", authController.checkUserValid);
 
-// check user valid
-authRouter.get("/user-valid", authController.checkUserValid);
+// // Generate Google OAuth URL
+// // authRouter.get('/google', (req, res) => {
+// //   const authUrl = oauth2Client.generateAuthUrl({
+// //     access_type: 'offline',
+// //     scope: [
+// //       'https://www.googleapis.com/auth/gmail.send',
+// //       'https://www.googleapis.com/auth/userinfo.email'
+// //     ], // Use the correct Gmail API scope
+// //     prompt: 'consent',
+// //     include_granted_scopes: true
+// //   });
 
- export default authRouter;
+// //   res.json({ url: authUrl });
+// // });
+
+//  export default authRouter;

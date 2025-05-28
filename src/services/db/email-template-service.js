@@ -76,3 +76,14 @@ export async function getPaginatedTemplates(userId, searchQuery, page, limit, sk
         throw error;
     }
 }
+
+export async function deleteTemplateById(templateId) {
+    try {
+        const response = await Template.findByIdAndDelete(templateId);
+        if (!response) throw new Error("Template Deletion failed")
+        return response;
+    } catch (error) {
+        console.error("Error in emailTemplateService.deleteTemplateById ", error);
+        throw error;
+    }
+}

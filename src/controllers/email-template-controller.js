@@ -65,3 +65,14 @@ export async function getPaginatedTemplates(req, res, next) {
       res.status(500).json({ success: false, message: "Something went wrong during fetching email template in pagination"})
   }
 }
+
+export async function deleteTemplateById(req, res, next) {
+  try {
+      const { templateId } = req.params;
+      await emailTemplateService.deleteTemplateById(templateId);
+      res.status(200).json({ success: true, message: "Template deleted successfully "});
+  } catch (error) {
+    console.error("Error getting deleting email template: ", error);
+    res.status(500).json({ success: false, message: "Something went wrong during deleting email template"})
+  }
+}
