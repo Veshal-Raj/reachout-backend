@@ -4,6 +4,7 @@ import * as listBuilderController from "../controllers/list-builder-controller.j
 import * as emailTemplateController from "../controllers/email-template-controller.js"
 import * as campaignController from "../controllers/campaign-controller.js"
 import * as userController from "../controllers/user-controller.js"
+import * as subscriberController from "../controllers/subscriber-controller.js"
 
 const router = Router();
 
@@ -22,5 +23,7 @@ router.post("/email-template", authMiddleware, emailTemplateController.createEma
 router.delete("/email-template/:templateId", authMiddleware, emailTemplateController.deleteTemplateById)
 
 router.post("/send-campaign", authMiddleware, campaignController.sendCampaign);
+
+router.post("/subscriber", subscriberController.createSubscriber);
  
 export default router;
