@@ -34,6 +34,9 @@ app.use(cookieParser())
 app.use(morgan('dev'));
 
 
+app.get('/ping', (req, res) => {
+  res.status(200).json({ success: true, message: "Pong" });
+});
 app.use('/api/v1', router); 
 app.use('/api/v1/auth', authRoutes);
 
