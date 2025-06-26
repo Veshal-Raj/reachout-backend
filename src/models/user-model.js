@@ -10,6 +10,7 @@ const userSchema = new Schema(
         senderEmail: { type: String, default: "" },
         senderEmailPassword: { type: String, default: "" }
       },
+      profilePicture: { type: String, default: "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"},
       verified: { type: Boolean, default: false },
       refreshToken: { type: String, required: false},
       createdAt: {

@@ -9,9 +9,9 @@ dotenv.config();
 import agenda from './services/job/agenda.js';
 import "./services/job/email-campaign-job.js";
 
+import authRoutes from "./routes/auth.js";
 import router from './routes/index.js';
 import errorHandler from './middlewares/error-handler/index.js';
-import authRoutes from "./routes/auth.js";
 
 const app = express();
 

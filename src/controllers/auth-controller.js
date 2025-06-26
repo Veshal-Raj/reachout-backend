@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { google } from "googleapis";
 import * as userService from "../services/db/user-service.js"
 import dotenv from 'dotenv';
-import { generateToken } from "../utils/helper.js";
+import { extractNameParts, generateToken } from "../utils/helper.js";
 import User from "../models/user-model.js";
 dotenv.config();
 
@@ -14,7 +14,7 @@ const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_REDIRECT_URI
 );
 
-export async function generateGoogleAuthUrl(req, res, next) {
+export async function generateGoogleAuthUrl(_req, res, _next) {
   try {
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
@@ -33,7 +33,7 @@ export async function generateGoogleAuthUrl(req, res, next) {
   }
 }
 
-export async function handleOAuthCallback(req, res, next) {
+export async function handleOAuthCallback(req, res, _next) {
   try {
       const { code, error } = req.query;
   
@@ -66,8 +66,7 @@ export async function handleOAuthCallback(req, res, next) {
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const { data: googleUser } = await oauth2.userinfo.get();
     
-    console.log('Google user info:', googleUser.email);
-    
+    const { firstName, lastName } = extractNameParts(googleUser.name);
     // Save/update user in database
     let user = await User.findOne({ email: googleUser.email });
     
@@ -84,13 +83,14 @@ export async function handleOAuthCallback(req, res, next) {
       console.log('Updated existing user:', user.email);
     } else {
       user = await userService.createUser(
-        googleUser.given_name || 'User',
-        googleUser.family_name || 'Name',
+        firstName|| 'User',
+        lastName || 'Name',
         googleUser.email,
         'oauth-user',
         true,
         refresh_token,
-        googleUser.email
+        googleUser.email,
+        googleUser.picture,
       )
     }
 
@@ -121,7 +121,7 @@ export async function handleOAuthCallback(req, res, next) {
   }
 }
 
-export async function logoutUser(req, res, next) {
+export async function logoutUser(_req, res, _next) {
     try {
       res.clearCookie('token', {
         httpOnly: true,
@@ -136,7 +136,7 @@ export async function logoutUser(req, res, next) {
   }
 }
 
-export async function checkUserValid(req, res, next) {
+export async function checkUserValid(req, res, _next) {
     try {
       const token = req.cookies.token;
 

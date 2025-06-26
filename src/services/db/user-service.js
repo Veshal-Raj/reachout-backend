@@ -33,6 +33,7 @@ export async function createUser(
     verified,
     refreshToken,
     senderEmail,
+    profilePicture,
 ) {
     try {
         const user = await User.create({
@@ -44,7 +45,8 @@ export async function createUser(
             refreshToken: refreshToken,
             metaData: {
                 senderEmail: senderEmail
-            }
+            },
+            profilePicture,
         });
 
         return user;
