@@ -65,8 +65,8 @@ export async function handleOAuthCallback(req, res, _next) {
     oauth2Client.setCredentials({ access_token });
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const { data: googleUser } = await oauth2.userinfo.get();
-    
-    const { firstName, lastName } = extractNameParts(googleUser.name);
+    console.log('google user --- ', googleUser)
+    const { firstName, lastName } = extractNameParts(googleUser?.name, googleUser.email);
     // Save/update user in database
     let user = await User.findOne({ email: googleUser.email });
     
@@ -84,7 +84,7 @@ export async function handleOAuthCallback(req, res, _next) {
     } else {
       user = await userService.createUser(
         firstName|| 'User',
-        lastName || 'Name',
+        lastName || '',
         googleUser.email,
         'oauth-user',
         true,
