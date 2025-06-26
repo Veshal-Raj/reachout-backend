@@ -14,18 +14,33 @@ export const validateEmail = (email) => {
     return re.test(String(email).toLowerCase());
 };
 
-export const extractNameParts = (fullName) => {
-  const nameParts = fullName.split(' ');
-
+export const extractNameParts = (fullName, email) => {
   let firstName = '';
   let lastName = '';
 
-  if (nameParts.length === 1) {
+  if (fullName?.trim()) {
+    const nameParts = fullName.trim().split(' ');
     firstName = nameParts[0];
-  } else if (nameParts.length > 1) {
-    firstName = nameParts[0];
-    lastName = nameParts.slice(1).join(' '); // handles middle names too
+    lastName = nameParts.slice(1).join(' ');
+  } else if (email) {
+    const emailPrefix = email.split('@')[0];
+    const cleaned = emailPrefix.replace(/\d+/g, '');
+    const parts = cleaned.split(/[\.\_\-]/);
+
+    if (parts.length === 1) {
+      firstName = parts[0];
+      lastName = "";
+    } else {
+      firstName = parts[0];
+      lastName = parts.slice(1).join(' ');
+    }
+
+    firstName = capitalize(firstName);
+    lastName = lastName ? capitalize(lastName): "";
   }
 
   return { firstName, lastName };
-}
+};
+
+const capitalize = (str) =>
+  str?.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
